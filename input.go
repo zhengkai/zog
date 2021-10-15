@@ -21,13 +21,14 @@ type Level uint8
 
 // Input ...
 type Input struct {
-	CDefault *config
-	CPrint   *config
-	CDebug   *config
-	CInfo    *config
-	CError   *config
-	CWarn    *config
-	CFatal   *config
+	CDefault *Config
+	CWrite   *Config
+	CPrint   *Config
+	CDebug   *Config
+	CInfo    *Config
+	CError   *Config
+	CWarn    *Config
+	CFatal   *Config
 
 	DirBase string
 }
@@ -41,9 +42,11 @@ func NewSimple(name string) (i *Input, err error) {
 	}
 
 	i = &Input{
-		CDefault: &config{
-			o: &output{
-				dst: []io.Writer{
+		CDefault: &Config{
+			TimeFormat: `2006-01-02 15:04:05 `,
+			Caller:     CallerShorter,
+			Output: &Output{
+				Dest: []io.Writer{
 					os.Stdout,
 					f,
 				},
@@ -57,10 +60,27 @@ func NewSimple(name string) (i *Input, err error) {
 // Print ...
 func (i *Input) Print(msg ...interface{}) {
 	s := fmt.Sprint(msg...)
-	i.write(i.CPrint, []byte(s))
+	i.write(i.CPrint, s)
 }
 
-func (i *Input) write(c *config, p []byte) {
+// Println ...
+func (i *Input) Println(msg ...interface{}) {
+	s := fmt.Sprintln(msg...)
+	i.write(i.CPrint, s)
+}
+
+// Writer for io.Writer
+func (i *Input) Write(p []byte) (n int, err error) {
+	c := i.CWrite
+	if c == nil {
+		c = i.CDefault
+	}
+	c.writeAB(p)
+	n = len(p)
+	return
+}
+
+func (i *Input) write(c *Config, p string) {
 	if c == nil {
 		c = i.CDefault
 	}

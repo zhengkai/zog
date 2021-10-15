@@ -2,7 +2,7 @@ package zog
 
 // just like Lshortfile/Llongfile in pkg/log
 const (
-	CallerNone    = callerType(iota + 1)
+	CallerNone    = callerType(iota)
 	CallerShort   // caller.go:42
 	CallerShorter // caller:42
 	CallerLong    // /dir/caller.go:42
