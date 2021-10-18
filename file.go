@@ -4,11 +4,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 // FileRotation ...
 type FileRotation struct {
+	mux     sync.Mutex
 	FnName  func(time.Time) string
 	name    string
 	file    *os.File
@@ -32,13 +34,12 @@ func NewFileRotation(dir, format string) *FileRotation {
 
 // Write ...
 func (fr *FileRotation) Write(p []byte) (n int, err error) {
-	return fr.TimeWrite(p, time.Now())
-}
 
-// TimeWrite ...
-func (fr *FileRotation) TimeWrite(p []byte, t time.Time) (n int, err error) {
+	name := fr.FnName(time.Now())
 
-	name := fr.FnName(t)
+	fr.mux.Lock()
+	defer fr.mux.Unlock()
+
 	if name != fr.name {
 		if fr.file != nil {
 			fr.file.Close()
@@ -49,7 +50,7 @@ func (fr *FileRotation) TimeWrite(p []byte, t time.Time) (n int, err error) {
 		os.Mkdir(dir, fr.PermDir)
 
 		var f *os.File
-		f, err = os.OpenFile(name, os.O_WRONLY|os.O_CREATE, fr.Perm)
+		f, err = os.OpenFile(name, baseFileMode|os.O_APPEND, fr.Perm)
 		if err != nil {
 			return
 		}

@@ -2,32 +2,77 @@ package zog
 
 import (
 	"bytes"
+	"io"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
 
+const defaultTimeFormat = `2006-01-02 15:04:05 `
+
 // Config ...
 type Config struct {
+	Caller     CallerType
 	Output     *Output
-	Caller     callerType
+	Prefix     string
+	Color      string
 	TimeFormat string
+	dir        string
+	dirLen     int
+}
+
+// NewConfig ...
+func NewConfig() *Config {
+	return &Config{
+		Caller:     CallerLong,
+		TimeFormat: defaultTimeFormat,
+		Output: &Output{
+			Dest: []io.Writer{
+				os.Stdout,
+			},
+		},
+	}
+}
+
+// AddOutput ...
+func (c *Config) AddOutput(w io.Writer) {
+	c.Output.Dest = append(c.Output.Dest, w)
+}
+
+// Clone ...
+func (c *Config) Clone() *Config {
+	x := *c
+	return &x
 }
 
 func (c *Config) writePrepare() *bytes.Buffer {
 
 	var buf bytes.Buffer
 
+	if c.Color != `` {
+		buf.WriteString("\x1b[")
+		buf.WriteString(c.Color)
+		buf.WriteRune('m')
+	}
+
+	if c.Prefix != `` {
+		buf.WriteString(c.Prefix)
+	}
+
 	if c.TimeFormat != `` {
 		buf.WriteString(time.Now().Format(c.TimeFormat))
 	}
 
 	if c.Caller != CallerNone {
-		_, file, line, ok := runtime.Caller(3)
+		_, file, line, ok := runtime.Caller(4)
 		if ok {
 			if c.Caller == CallerShorter {
 				file = strings.TrimSuffix(file, `.go`)
+			}
+			if c.dirLen > 0 && strings.HasPrefix(file, c.dir) {
+				file = file[c.dirLen:]
 			}
 			buf.WriteString(file)
 			buf.WriteRune(':')
@@ -45,24 +90,55 @@ func (c *Config) writePrepare() *bytes.Buffer {
 func (c *Config) writeAB(msg []byte) {
 
 	buf := c.writePrepare()
+	b := *buf
 
-	(*buf).Write(msg)
 	l := len(msg)
-	if l == 0 || msg[l-1] != '\n' {
-		(*buf).WriteRune('\n')
+	if l == 0 {
+	} else if msg[l-1] == '\n' {
+		b.Write(msg[:l-1])
+	} else {
+		b.Write(msg)
 	}
+	if c.Color != `` {
+		b.WriteString("\x1b[0m")
+	}
+	b.WriteRune('\n')
 
-	(*buf).WriteTo(c.Output)
+	b.WriteTo(c.Output)
 }
 
 func (c *Config) write(msg string) {
 
 	buf := c.writePrepare()
+	b := *buf
 
-	(*buf).WriteString(msg)
-	if !strings.HasSuffix(msg, "\n") {
-		(*buf).WriteRune('\n')
+	if msg != `` {
+		if strings.HasSuffix(msg, "\n") {
+			b.WriteString(msg[:len(msg)-1])
+		} else {
+			b.WriteString(msg)
+		}
 	}
 
-	(*buf).WriteTo(c.Output)
+	if c.Color != `` {
+		b.WriteString("\x1b[0m")
+	}
+
+	b.WriteRune('\n')
+
+	b.WriteTo(c.Output)
+}
+
+// SetDirPrefix ...
+func (c *Config) SetDirPrefix(d string) {
+
+	if len(d) == 0 {
+		return
+	}
+
+	if !strings.HasSuffix(d, `/`) {
+		d += `/`
+	}
+	c.dir = d
+	c.dirLen = len(d)
 }

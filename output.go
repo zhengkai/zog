@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+const baseFileMode = os.O_WRONLY | os.O_CREATE
+
 // Output ...
 type Output struct {
 	Dest      []io.Writer
@@ -23,7 +25,7 @@ func (o *Output) Write(p []byte) (n int, err error) {
 
 // OutputFile ...
 func OutputFile(name string, isAppend bool) (f *os.File, err error) {
-	flag := os.O_WRONLY | os.O_CREATE
+	flag := baseFileMode
 	if isAppend {
 		flag |= os.O_APPEND
 	} else {
