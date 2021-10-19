@@ -5,12 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"runtime/debug"
 )
 
 var errWatch = errors.New(`Incorrect use of props`)
 
 // Watch ...
 func (i *Input) Watch(err *error, prefix ...interface{}) {
+	i.watch(err, false, prefix...)
+}
+
+// WatchStack ...
+func (i *Input) WatchStack(err *error, prefix ...interface{}) {
+	i.watch(err, true, prefix...)
+}
+
+func (i *Input) watch(err *error, stack bool, prefix ...interface{}) {
 
 	if err == nil {
 		err = &errWatch
@@ -26,9 +36,34 @@ func (i *Input) Watch(err *error, prefix ...interface{}) {
 		buf.WriteRune(' ')
 	}
 
-	buf.WriteString(getFrame(1).Function)
+	buf.WriteString(getFrame(2).Function)
 	buf.WriteString(`() `)
 	buf.WriteString((*err).Error())
+
+	cfg := i.CError
+	if cfg == nil {
+		cfg = i.CDefault
+	}
+
+	if stack {
+		a := bytes.Split(debug.Stack(), []byte{'\n'})
+		if len(a) > 7 {
+			// pretty stack
+			var prefix []byte
+			if cfg.dirLen > 0 {
+				prefix = []byte("\t" + cfg.dir)
+			}
+			fmt.Println(string(prefix))
+			for _, v := range a[7:] {
+				buf.Write([]byte{'\n', '\t'})
+				if prefix != nil && bytes.HasPrefix(v, prefix) {
+					v = v[len(prefix)-1:]
+					v[0] = '\t'
+				}
+				buf.Write(v)
+			}
+		}
+	}
 
 	i.write(i.CError, buf.String())
 }

@@ -16,7 +16,8 @@ const defaultTimeFormat = `2006-01-02 15:04:05 `
 type Config struct {
 	Caller     CallerType
 	Output     *Output
-	Prefix     string
+	LinePrefix string // beginning of the line
+	MsgPrefix  string // before the message
 	Color      string
 	TimeFormat string
 	dir        string
@@ -44,6 +45,10 @@ func (c *Config) AddOutput(w io.Writer) {
 // Clone ...
 func (c *Config) Clone() *Config {
 	x := *c
+
+	o := *c.Output
+	x.Output = &o
+
 	return &x
 }
 
@@ -57,8 +62,8 @@ func (c *Config) writePrepare() *bytes.Buffer {
 		buf.WriteRune('m')
 	}
 
-	if c.Prefix != `` {
-		buf.WriteString(c.Prefix)
+	if c.LinePrefix != `` {
+		buf.WriteString(c.LinePrefix)
 	}
 
 	if c.TimeFormat != `` {
@@ -68,9 +73,7 @@ func (c *Config) writePrepare() *bytes.Buffer {
 	if c.Caller != CallerNone {
 		_, file, line, ok := runtime.Caller(4)
 		if ok {
-			if c.Caller == CallerShorter {
-				file = strings.TrimSuffix(file, `.go`)
-			}
+			file = strings.TrimSuffix(file, hideExt)
 			if c.dirLen > 0 && strings.HasPrefix(file, c.dir) {
 				file = file[c.dirLen:]
 			}
@@ -84,6 +87,10 @@ func (c *Config) writePrepare() *bytes.Buffer {
 		buf.WriteRune(' ')
 	}
 
+	if c.MsgPrefix != `` {
+		buf.WriteString(c.MsgPrefix)
+	}
+
 	return &buf
 }
 
@@ -94,6 +101,7 @@ func (c *Config) writeAB(msg []byte) {
 
 	l := len(msg)
 	if l == 0 {
+		// do nothing
 	} else if msg[l-1] == '\n' {
 		b.Write(msg[:l-1])
 	} else {
@@ -129,10 +137,15 @@ func (c *Config) write(msg string) {
 	b.WriteTo(c.Output)
 }
 
-// SetDirPrefix ...
+func (c *Config) writeOutput(msg string) {
+}
+
+// SetDirPrefix dir prefix in caller filename with be hidden
 func (c *Config) SetDirPrefix(d string) {
 
 	if len(d) == 0 {
+		c.dir = ``
+		c.dirLen = 0
 		return
 	}
 

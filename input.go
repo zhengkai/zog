@@ -24,7 +24,6 @@ type Input struct {
 	CDefault *Config
 	CWrite   *Config
 	CPrint   *Config
-	CTrace   *Config
 	CDebug   *Config
 	CInfo    *Config
 	CError   *Config
@@ -80,9 +79,14 @@ func (i *Input) write(c *Config, p string) {
 	c.write(p)
 }
 
-// SetDirPrefix ...
+// AllConfig ...
+func (i *Input) AllConfig() []*Config {
+	return []*Config{i.CDefault, i.CWrite, i.CPrint, i.CDebug, i.CInfo, i.CError, i.CWarn, i.CFatal}
+}
+
+// SetDirPrefix dir prefix in caller filename with be hidden
 func (i *Input) SetDirPrefix(d string) {
-	for _, c := range []*Config{i.CDefault, i.CWrite, i.CPrint, i.CDebug, i.CInfo, i.CError, i.CWarn, i.CFatal} {
+	for _, c := range i.AllConfig() {
 		if c != nil {
 			c.SetDirPrefix(d)
 		}
