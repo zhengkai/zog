@@ -47,14 +47,13 @@ func (i *Input) watch(err *error, stack bool, prefix ...interface{}) {
 
 	if stack {
 		a := bytes.Split(debug.Stack(), []byte{'\n'})
-		if len(a) > 7 {
+		if len(a) > 8 {
 			// pretty stack
 			var prefix []byte
 			if cfg.dirLen > 0 {
 				prefix = []byte("\t" + cfg.dir)
 			}
-			fmt.Println(string(prefix))
-			for _, v := range a[7:] {
+			for _, v := range a[7 : len(a)-1] {
 				buf.Write([]byte{'\n', '\t'})
 				if prefix != nil && bytes.HasPrefix(v, prefix) {
 					v = v[len(prefix)-1:]
@@ -79,14 +78,14 @@ func getFrame(skipFrames int) (f runtime.Frame) {
 	f = runtime.Frame{Function: "unknown"}
 	if n > 0 {
 		frames := runtime.CallersFrames(pc[:n])
-		for more, idx := true, 0; more && idx <= maxIdx; idx++ {
-			var nf runtime.Frame
-			nf, more = frames.Next()
-			if idx == maxIdx {
-				f = nf
+		for idx := 0; idx <= maxIdx; idx++ {
+			nf, more := frames.Next()
+			f = nf
+			if !more {
+				break
 			}
 		}
 	}
 
-	return f
+	return
 }

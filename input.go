@@ -34,7 +34,7 @@ type Input struct {
 // NewSimple ...
 func NewSimple(file string) (i *Input, err error) {
 
-	f, err := OutputFile(file, false)
+	f, err := NewFile(file, false)
 	if err != nil {
 		return
 	}

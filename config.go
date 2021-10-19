@@ -14,14 +14,15 @@ const defaultTimeFormat = `2006-01-02 15:04:05 `
 
 // Config ...
 type Config struct {
-	Caller     CallerType
-	Output     *Output
-	LinePrefix string // beginning of the line
-	MsgPrefix  string // before the message
-	Color      string
-	TimeFormat string
-	dir        string
-	dirLen     int
+	Caller          CallerType
+	Output          []io.Writer
+	IgnoreOutputErr bool
+	LinePrefix      string // beginning of the line
+	MsgPrefix       string // before the message
+	Color           string
+	TimeFormat      string
+	dir             string
+	dirLen          int
 }
 
 // NewConfig ...
@@ -29,32 +30,28 @@ func NewConfig() *Config {
 	return &Config{
 		Caller:     CallerLong,
 		TimeFormat: defaultTimeFormat,
-		Output: &Output{
-			Dest: []io.Writer{
-				os.Stdout,
-			},
+		Output: []io.Writer{
+			os.Stdout,
 		},
 	}
 }
 
 // AddOutput ...
 func (c *Config) AddOutput(w io.Writer) {
-	c.Output.Dest = append(c.Output.Dest, w)
+	c.Output = append(c.Output, w)
 }
 
 // Clone ...
 func (c *Config) Clone() *Config {
 	x := *c
-
-	o := *c.Output
-	x.Output = &o
-
+	x.Output = nil
+	for _, v := range c.Output {
+		x.AddOutput(v)
+	}
 	return &x
 }
 
-func (c *Config) writePrepare() *bytes.Buffer {
-
-	var buf bytes.Buffer
+func (c *Config) writePrepare() (buf bytes.Buffer) {
 
 	if c.Color != `` {
 		buf.WriteString("\x1b[")
@@ -91,53 +88,59 @@ func (c *Config) writePrepare() *bytes.Buffer {
 		buf.WriteString(c.MsgPrefix)
 	}
 
-	return &buf
+	return
 }
 
 func (c *Config) writeAB(msg []byte) {
 
 	buf := c.writePrepare()
-	b := *buf
 
 	l := len(msg)
 	if l == 0 {
 		// do nothing
 	} else if msg[l-1] == '\n' {
-		b.Write(msg[:l-1])
+		buf.Write(msg[:l-1])
 	} else {
-		b.Write(msg)
+		buf.Write(msg)
 	}
 	if c.Color != `` {
-		b.WriteString("\x1b[0m")
+		buf.WriteString("\x1b[0m")
 	}
-	b.WriteRune('\n')
+	buf.WriteRune('\n')
 
-	b.WriteTo(c.Output)
+	buf.WriteTo(c)
 }
 
 func (c *Config) write(msg string) {
 
 	buf := c.writePrepare()
-	b := *buf
 
 	if msg != `` {
 		if strings.HasSuffix(msg, "\n") {
-			b.WriteString(msg[:len(msg)-1])
+			buf.WriteString(msg[:len(msg)-1])
 		} else {
-			b.WriteString(msg)
+			buf.WriteString(msg)
 		}
 	}
 
 	if c.Color != `` {
-		b.WriteString("\x1b[0m")
+		buf.WriteString("\x1b[0m")
 	}
 
-	b.WriteRune('\n')
+	buf.WriteRune('\n')
 
-	b.WriteTo(c.Output)
+	buf.WriteTo(c)
 }
 
-func (c *Config) writeOutput(msg string) {
+func (c *Config) Write(p []byte) (n int, err error) {
+
+	for _, o := range c.Output {
+		n, err = o.Write(p)
+		if err != nil && !c.IgnoreOutputErr {
+			return
+		}
+	}
+	return
 }
 
 // SetDirPrefix dir prefix in caller filename with be hidden

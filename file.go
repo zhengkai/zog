@@ -8,14 +8,22 @@ import (
 	"time"
 )
 
+const baseFileMode = os.O_WRONLY | os.O_CREATE
+
+// default permission when create file / dir
+var (
+	DefaultPermFile os.FileMode = 0644
+	DefaultPermDir  os.FileMode = 0755
+)
+
 // FileRotation ...
 type FileRotation struct {
-	mux     sync.Mutex
-	FnName  func(time.Time) string
-	name    string
-	file    *os.File
-	Perm    os.FileMode
-	PermDir os.FileMode
+	mux      sync.Mutex
+	FnName   func(time.Time) string
+	name     string
+	file     *os.File
+	PermFile os.FileMode
+	PermDir  os.FileMode
 }
 
 // NewFileRotation ...
@@ -27,8 +35,8 @@ func NewFileRotation(dir, format string) *FileRotation {
 		FnName: func(t time.Time) string {
 			return dir + t.Format(format)
 		},
-		Perm:    0644,
-		PermDir: 0755,
+		PermFile: DefaultPermFile,
+		PermDir:  DefaultPermDir,
 	}
 }
 
@@ -50,7 +58,7 @@ func (fr *FileRotation) Write(p []byte) (n int, err error) {
 		os.Mkdir(dir, fr.PermDir)
 
 		var f *os.File
-		f, err = os.OpenFile(name, baseFileMode|os.O_APPEND, fr.Perm)
+		f, err = os.OpenFile(name, baseFileMode|os.O_APPEND, fr.PermFile)
 		if err != nil {
 			return
 		}
@@ -59,4 +67,19 @@ func (fr *FileRotation) Write(p []byte) (n int, err error) {
 	}
 
 	return fr.file.Write(p)
+}
+
+// NewFile ...
+func NewFile(name string, isAppend bool) (f *os.File, err error) {
+	flag := baseFileMode
+	if isAppend {
+		flag |= os.O_APPEND
+	} else {
+		flag |= os.O_TRUNC
+	}
+	f, err = os.OpenFile(name, flag, DefaultPermFile)
+	if err != nil {
+		return
+	}
+	return
 }
