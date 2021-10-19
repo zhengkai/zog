@@ -11,16 +11,16 @@ import (
 var errWatch = errors.New(`Incorrect use of props`)
 
 // Watch ...
-func (i *Input) Watch(err *error, prefix ...interface{}) {
+func (i *Logger) Watch(err *error, prefix ...interface{}) {
 	i.watch(err, false, prefix...)
 }
 
 // WatchStack ...
-func (i *Input) WatchStack(err *error, prefix ...interface{}) {
+func (i *Logger) WatchStack(err *error, prefix ...interface{}) {
 	i.watch(err, true, prefix...)
 }
 
-func (i *Input) watch(err *error, stack bool, prefix ...interface{}) {
+func (i *Logger) watch(err *error, stack bool, prefix ...interface{}) {
 
 	if err == nil {
 		err = &errWatch

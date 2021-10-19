@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const defaultTimeFormat = `2006-01-02 15:04:05 `
-
 // Config ...
 type Config struct {
 	Caller          CallerType
@@ -29,9 +27,20 @@ type Config struct {
 func NewConfig() *Config {
 	return &Config{
 		Caller:     CallerLong,
-		TimeFormat: defaultTimeFormat,
+		TimeFormat: TimeYear,
 		Output: []io.Writer{
 			os.Stdout,
+		},
+	}
+}
+
+// NewErrConfig ...
+func NewErrConfig() *Config {
+	return &Config{
+		Caller:     CallerLong,
+		TimeFormat: TimeYear,
+		Output: []io.Writer{
+			os.Stderr,
 		},
 	}
 }
@@ -91,27 +100,11 @@ func (c *Config) writePrepare() (buf bytes.Buffer) {
 	return
 }
 
-func (c *Config) writeAB(msg []byte) {
-
-	buf := c.writePrepare()
-
-	l := len(msg)
-	if l == 0 {
-		// do nothing
-	} else if msg[l-1] == '\n' {
-		buf.Write(msg[:l-1])
-	} else {
-		buf.Write(msg)
-	}
-	if c.Color != `` {
-		buf.WriteString("\x1b[0m")
-	}
-	buf.WriteRune('\n')
-
-	buf.WriteTo(c)
-}
-
 func (c *Config) write(msg string) {
+
+	if len(c.Output) == 0 {
+		return
+	}
 
 	buf := c.writePrepare()
 

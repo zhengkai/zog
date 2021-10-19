@@ -69,8 +69,14 @@ func (fr *FileRotation) Write(p []byte) (n int, err error) {
 	return fr.file.Write(p)
 }
 
-// NewFile ...
+// NewFile utils for create log file, will create dir automatically
 func NewFile(name string, isAppend bool) (f *os.File, err error) {
+
+	err = os.MkdirAll(filepath.Dir(name), DefaultPermDir)
+	if err != nil {
+		return
+	}
+
 	flag := baseFileMode
 	if isAppend {
 		flag |= os.O_APPEND
