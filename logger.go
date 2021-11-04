@@ -1,14 +1,12 @@
 package zog
 
 import (
-	"io"
 	"log"
 )
 
 // Logger ...
 type Logger struct {
 	CDefault *Config
-	CWrite   *Config
 	CPrint   *Config
 	CDebug   *Config
 	CInfo    *Config
@@ -37,19 +35,11 @@ func NewSimple(file string) (i *Logger, err error) {
 
 // Writer for io.Writer
 func (i *Logger) Write(p []byte) (n int, err error) {
-	c := i.CWrite
-	if c == nil {
-		c = i.CDefault
-	}
-	n, err = c.Write(p)
-	return
+	return i.CDefault.Write(p)
 }
 
 func (i *Logger) write(c *Config, p string) {
-	if c == nil {
-		c = i.CDefault
-	}
-	io.WriteString(c, p)
+	i.GetConfig(c).WriteString(p)
 }
 
 // GetConfig ...
@@ -62,7 +52,7 @@ func (i *Logger) GetConfig(c *Config) *Config {
 
 // AllConfig ...
 func (i *Logger) AllConfig() []*Config {
-	return []*Config{i.CDefault, i.CWrite, i.CPrint, i.CDebug, i.CInfo, i.CError, i.CWarn, i.CFatal}
+	return []*Config{i.CDefault, i.CPrint, i.CDebug, i.CInfo, i.CError, i.CWarn, i.CFatal}
 }
 
 // SetDirPrefix dir prefix in caller filename with be hidden

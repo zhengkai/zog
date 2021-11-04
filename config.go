@@ -61,7 +61,9 @@ func (c *Config) Clone() *Config {
 	return &x
 }
 
-func (c *Config) writePrepare() (buf bytes.Buffer) {
+func (c *Config) bufferPrepare() (buf *bytes.Buffer) {
+
+	buf = &bytes.Buffer{}
 
 	if c.Color != `` {
 		buf.WriteString("\x1b[")
@@ -101,13 +103,55 @@ func (c *Config) writePrepare() (buf bytes.Buffer) {
 	return
 }
 
+func (c *Config) bufferEnd(buf *bytes.Buffer) (n int, err error) {
+
+	if c.Color != `` {
+		buf.WriteString("\x1b[0m")
+	}
+
+	buf.WriteRune('\n')
+
+	n, err = c.DirectWrite(buf.Bytes())
+	buf.Reset()
+
+	return
+}
+
+// WriteString ...
+func (c *Config) WriteString(msg string) (n int, err error) {
+
+	if len(c.Output) == 0 {
+		return
+	}
+
+	buf := c.bufferPrepare()
+
+	size := len(msg)
+	empty := true
+	if size > 0 {
+		for i := size - 1; i > 0; i-- {
+			if msg[i] != '\n' {
+				empty = false
+				size = i + 1
+				break
+			}
+		}
+	}
+	if !empty {
+		buf.WriteString(msg[:size])
+	}
+
+	return c.bufferEnd(buf)
+}
+
+// Write ...
 func (c *Config) Write(msg []byte) (n int, err error) {
 
 	if len(c.Output) == 0 {
 		return
 	}
 
-	buf := c.writePrepare()
+	buf := c.bufferPrepare()
 
 	size := len(msg)
 	empty := true
@@ -124,20 +168,7 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 		buf.Write(msg[:size])
 	}
 
-	if c.Color != `` {
-		buf.WriteString("\x1b[0m")
-	}
-
-	buf.WriteRune('\n')
-
-	ab := buf.Bytes()
-
-	n, err = c.DirectWrite(ab)
-
-	buf.Reset()
-	ab = ab[:0]
-
-	return
+	return c.bufferEnd(buf)
 }
 
 // DirectWrite ...
