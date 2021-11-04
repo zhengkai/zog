@@ -40,10 +40,7 @@ func (i *Logger) watch(err *error, stack bool, prefix ...interface{}) {
 	buf.WriteString(`() `)
 	buf.WriteString((*err).Error())
 
-	cfg := i.CError
-	if cfg == nil {
-		cfg = i.CDefault
-	}
+	cfg := i.GetConfig(i.CError)
 
 	if stack {
 		a := bytes.Split(debug.Stack(), []byte{'\n'})
@@ -64,7 +61,7 @@ func (i *Logger) watch(err *error, stack bool, prefix ...interface{}) {
 		}
 	}
 
-	i.write(i.CError, buf.String())
+	buf.WriteTo(cfg)
 }
 
 func getFrame(skipFrames int) (f runtime.Frame) {

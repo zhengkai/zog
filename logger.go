@@ -1,6 +1,7 @@
 package zog
 
 import (
+	"io"
 	"log"
 )
 
@@ -40,8 +41,7 @@ func (i *Logger) Write(p []byte) (n int, err error) {
 	if c == nil {
 		c = i.CDefault
 	}
-	c.write(string(p))
-	n = len(p)
+	n, err = c.Write(p)
 	return
 }
 
@@ -49,7 +49,15 @@ func (i *Logger) write(c *Config, p string) {
 	if c == nil {
 		c = i.CDefault
 	}
-	c.write(p)
+	io.WriteString(c, p)
+}
+
+// GetConfig ...
+func (i *Logger) GetConfig(c *Config) *Config {
+	if c != nil {
+		return c
+	}
+	return i.CDefault
 }
 
 // AllConfig ...

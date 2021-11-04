@@ -7,74 +7,62 @@ import "fmt"
 
 // Info ...
 func (i *Logger) Info(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CInfo, s)
+	fmt.Fprint(i.GetConfig(i.CInfo), msg...)
 }
 
 // Infoln ...
 func (i *Logger) Infoln(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CInfo, s)
+	fmt.Fprintln(i.GetConfig(i.CInfo), msg...)
 }
 
 // Infof ...
 func (i *Logger) Infof(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CInfo, s)
+	fmt.Fprintf(i.GetConfig(i.CInfo), format, msg...)
 }
 
 // Warning ...
 func (i *Logger) Warning(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CWarn, s)
+	fmt.Fprint(i.GetConfig(i.CWarn), msg...)
 }
 
 // Warningln ...
 func (i *Logger) Warningln(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CWarn, s)
+	fmt.Fprintln(i.GetConfig(i.CWarn), msg...)
 }
 
 // Warningf ...
 func (i *Logger) Warningf(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CWarn, s)
+	fmt.Fprintf(i.GetConfig(i.CWarn), format, msg...)
 }
 
 // Error ...
 func (i *Logger) Error(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CError, s)
+	fmt.Fprint(i.GetConfig(i.CError), msg...)
 }
 
 // Errorln ...
 func (i *Logger) Errorln(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CError, s)
+	fmt.Fprintln(i.GetConfig(i.CError), msg...)
 }
 
 // Errorf ...
 func (i *Logger) Errorf(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CError, s)
+	fmt.Fprintf(i.GetConfig(i.CError), format, msg...)
 }
 
 // Fatal ...
 func (i *Logger) Fatal(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CFatal, s)
+	fmt.Fprint(i.GetConfig(i.CFatal), msg...)
 }
 
 // Fatalln ...
 func (i *Logger) Fatalln(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CFatal, s)
+	fmt.Fprintln(i.GetConfig(i.CFatal), msg...)
 }
 
 // Fatalf ...
 func (i *Logger) Fatalf(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CFatal, s)
+	fmt.Fprintf(i.GetConfig(i.CFatal), format, msg...)
 }
 
 // V ...

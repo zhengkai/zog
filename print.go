@@ -4,36 +4,30 @@ import "fmt"
 
 // Print ...
 func (i *Logger) Print(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CPrint, s)
+	fmt.Fprint(i.GetConfig(i.CPrint), msg...)
 }
 
 // Printf ...
 func (i *Logger) Printf(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CPrint, s)
+	fmt.Fprintf(i.GetConfig(i.CPrint), format, msg...)
 }
 
 // Println ...
 func (i *Logger) Println(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CPrint, s)
+	fmt.Fprintln(i.GetConfig(i.CPrint), msg...)
 }
 
 // Debug ...
 func (i *Logger) Debug(msg ...interface{}) {
-	s := fmt.Sprint(msg...)
-	i.write(i.CDebug, s)
+	fmt.Fprint(i.GetConfig(i.CDebug), msg...)
 }
 
 // Debugf ...
 func (i *Logger) Debugf(format string, msg ...interface{}) {
-	s := fmt.Sprintf(format, msg...)
-	i.write(i.CDebug, s)
+	fmt.Fprintf(i.GetConfig(i.CDebug), format, msg...)
 }
 
 // Debugln ...
 func (i *Logger) Debugln(msg ...interface{}) {
-	s := fmt.Sprintln(msg...)
-	i.write(i.CDebug, s)
+	fmt.Fprintln(i.GetConfig(i.CDebug), msg...)
 }

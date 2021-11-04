@@ -3,6 +3,7 @@ package zog
 import (
 	"bytes"
 	"io"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
@@ -100,7 +101,7 @@ func (c *Config) writePrepare() (buf bytes.Buffer) {
 	return
 }
 
-func (c *Config) write(msg string) {
+func (c *Config) Write(msg []byte) (n int, err error) {
 
 	if len(c.Output) == 0 {
 		return
@@ -108,12 +109,19 @@ func (c *Config) write(msg string) {
 
 	buf := c.writePrepare()
 
-	if msg != `` {
-		if strings.HasSuffix(msg, "\n") {
-			buf.WriteString(msg[:len(msg)-1])
-		} else {
-			buf.WriteString(msg)
+	size := len(msg)
+	empty := true
+	if size > 0 {
+		for i := size - 1; i > 0; i-- {
+			if msg[i] != '\n' {
+				empty = false
+				size = i + 1
+				break
+			}
 		}
+	}
+	if !empty {
+		buf.Write(msg[:size])
 	}
 
 	if c.Color != `` {
@@ -122,10 +130,18 @@ func (c *Config) write(msg string) {
 
 	buf.WriteRune('\n')
 
-	buf.WriteTo(c)
+	ab := buf.Bytes()
+
+	n, err = c.DirectWrite(ab)
+
+	buf.Reset()
+	ab = ab[:0]
+
+	return
 }
 
-func (c *Config) Write(p []byte) (n int, err error) {
+// DirectWrite ...
+func (c *Config) DirectWrite(p []byte) (n int, err error) {
 
 	for _, o := range c.Output {
 		n, err = o.Write(p)
@@ -150,4 +166,9 @@ func (c *Config) SetDirPrefix(d string) {
 	}
 	c.dir = d
 	c.dirLen = len(d)
+}
+
+// StdLogger make a log.Logger
+func (c *Config) StdLogger() *log.Logger {
+	return log.New(c, ``, 0)
 }
