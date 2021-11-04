@@ -83,9 +83,5 @@ func NewFile(name string, isAppend bool) (f *os.File, err error) {
 	} else {
 		flag |= os.O_TRUNC
 	}
-	f, err = os.OpenFile(name, flag, DefaultPermFile)
-	if err != nil {
-		return
-	}
-	return
+	return os.OpenFile(name, flag, DefaultPermFile)
 }
