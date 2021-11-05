@@ -2,13 +2,21 @@ package zog
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+)
+
+// Error ...
+var (
+	ErrNotInited = errors.New(`not initialized`)
+	ErrNoOutput  = errors.New(`no output`)
 )
 
 // Config ...
@@ -27,8 +35,8 @@ type Config struct {
 // NewConfig ...
 func NewConfig() *Config {
 	return &Config{
-		Caller:     CallerLong,
-		TimeFormat: TimeYear,
+		Caller:     DefaultCaller,
+		TimeFormat: DefaultTimeFormat,
 		Output: []io.Writer{
 			os.Stdout,
 		},
@@ -38,17 +46,12 @@ func NewConfig() *Config {
 // NewErrConfig ...
 func NewErrConfig() *Config {
 	return &Config{
-		Caller:     CallerLong,
-		TimeFormat: TimeYear,
+		Caller:     DefaultCaller,
+		TimeFormat: DefaultTimeFormat,
 		Output: []io.Writer{
 			os.Stderr,
 		},
 	}
-}
-
-// AddOutput ...
-func (c *Config) AddOutput(w io.Writer) {
-	c.Output = append(c.Output, w)
 }
 
 // Clone ...
@@ -56,7 +59,7 @@ func (c *Config) Clone() *Config {
 	x := *c
 	x.Output = nil
 	for _, v := range c.Output {
-		x.AddOutput(v)
+		x.Output = append(x.Output, v)
 	}
 	return &x
 }
@@ -83,8 +86,12 @@ func (c *Config) bufferPrepare() (buf *bytes.Buffer) {
 		_, file, line, ok := runtime.Caller(4)
 		if ok {
 			file = strings.TrimSuffix(file, hideExt)
-			if c.dirLen > 0 && strings.HasPrefix(file, c.dir) {
-				file = file[c.dirLen:]
+			if c.Caller == CallerShort {
+				file = filepath.Base(file)
+			} else {
+				if c.dirLen > 0 && strings.HasPrefix(file, c.dir) {
+					file = file[c.dirLen:]
+				}
 			}
 			buf.WriteString(file)
 			buf.WriteRune(':')
@@ -120,7 +127,12 @@ func (c *Config) bufferEnd(buf *bytes.Buffer) (n int, err error) {
 // WriteString ...
 func (c *Config) WriteString(msg string) (n int, err error) {
 
+	if c == nil {
+		err = ErrNotInited
+		return
+	}
 	if len(c.Output) == 0 {
+		err = ErrNoOutput
 		return
 	}
 
@@ -129,7 +141,7 @@ func (c *Config) WriteString(msg string) (n int, err error) {
 	size := len(msg)
 	empty := true
 	if size > 0 {
-		for i := size - 1; i > 0; i-- {
+		for i := size - 1; i >= 0; i-- {
 			if msg[i] != '\n' {
 				empty = false
 				size = i + 1
@@ -147,7 +159,12 @@ func (c *Config) WriteString(msg string) (n int, err error) {
 // Write ...
 func (c *Config) Write(msg []byte) (n int, err error) {
 
+	if c == nil {
+		err = ErrNotInited
+		return
+	}
 	if len(c.Output) == 0 {
+		err = ErrNoOutput
 		return
 	}
 
@@ -156,7 +173,7 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 	size := len(msg)
 	empty := true
 	if size > 0 {
-		for i := size - 1; i > 0; i-- {
+		for i := size - 1; i >= 0; i-- {
 			if msg[i] != '\n' {
 				empty = false
 				size = i + 1
@@ -171,9 +188,8 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 	return c.bufferEnd(buf)
 }
 
-// DirectWrite ...
+// DirectWrite write raw byte slice to Output, no color/time/file prefix ect.
 func (c *Config) DirectWrite(p []byte) (n int, err error) {
-
 	for _, o := range c.Output {
 		n, err = o.Write(p)
 		if err != nil && !c.IgnoreOutputErr {

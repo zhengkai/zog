@@ -24,7 +24,7 @@ func NewSimple(file string) (i *Logger, err error) {
 	}
 
 	cfg := NewConfig()
-	cfg.AddOutput(f)
+	cfg.Output = append(cfg.Output, f)
 
 	i = &Logger{
 		CDefault: cfg,

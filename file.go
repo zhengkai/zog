@@ -10,12 +10,6 @@ import (
 
 const baseFileMode = os.O_WRONLY | os.O_CREATE
 
-// default permission when create file / dir
-var (
-	DefaultPermFile os.FileMode = 0644
-	DefaultPermDir  os.FileMode = 0755
-)
-
 // FileRotation ...
 type FileRotation struct {
 	mux      sync.Mutex
