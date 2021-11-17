@@ -17,12 +17,14 @@ import (
 var (
 	ErrNotInited = errors.New(`not initialized`)
 	ErrNoOutput  = errors.New(`no output`)
+	ErrDisabled  = errors.New(`disabled`)
 )
 
 // Config ...
 type Config struct {
 	Caller          CallerType
 	Output          []io.Writer
+	Enable          bool
 	IgnoreOutputErr bool
 	LinePrefix      string // beginning of the line
 	MsgPrefix       string // before the message
@@ -37,6 +39,7 @@ func NewConfig() *Config {
 	return &Config{
 		Caller:     DefaultCaller,
 		TimeFormat: DefaultTimeFormat,
+		Enable:     true,
 		Output: []io.Writer{
 			os.Stdout,
 		},
@@ -48,6 +51,7 @@ func NewErrConfig() *Config {
 	return &Config{
 		Caller:     DefaultCaller,
 		TimeFormat: DefaultTimeFormat,
+		Enable:     true,
 		Output: []io.Writer{
 			os.Stderr,
 		},
@@ -131,6 +135,10 @@ func (c *Config) WriteString(msg string) (n int, err error) {
 		err = ErrNotInited
 		return
 	}
+	if !c.Enable {
+		err = ErrDisabled
+		return
+	}
 	if len(c.Output) == 0 {
 		err = ErrNoOutput
 		return
@@ -161,6 +169,10 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 
 	if c == nil {
 		err = ErrNotInited
+		return
+	}
+	if !c.Enable {
+		err = ErrDisabled
 		return
 	}
 	if len(c.Output) == 0 {
