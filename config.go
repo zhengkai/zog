@@ -181,6 +181,8 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 		return
 	}
 
+	n = len(msg)
+
 	buf := c.bufferPrepare()
 
 	size := len(msg)
@@ -197,8 +199,8 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 	if !empty {
 		buf.Write(msg[:size])
 	}
-
-	return c.bufferEnd(buf)
+	_, err = c.bufferEnd(buf)
+	return
 }
 
 // DirectWrite write raw byte slice to Output, no color/time/file prefix ect.
