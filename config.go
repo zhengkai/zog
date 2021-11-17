@@ -62,9 +62,8 @@ func NewErrConfig() *Config {
 // Clone ...
 func (c *Config) Clone() *Config {
 	x := *c
-	x.Output = nil
-	for _, v := range c.Output {
-		x.Output = append(x.Output, v)
+	if c.Output != nil {
+		x.Output = append([]io.Writer(nil), c.Output...)
 	}
 	return &x
 }
@@ -147,7 +146,8 @@ func (c *Config) WriteString(msg string) (n int, err error) {
 
 	buf := c.bufferPrepare()
 
-	size := len(msg)
+	n = len(msg)
+	size := n
 	empty := true
 	if size > 0 {
 		for i := size - 1; i >= 0; i-- {
@@ -181,11 +181,10 @@ func (c *Config) Write(msg []byte) (n int, err error) {
 		return
 	}
 
-	n = len(msg)
-
 	buf := c.bufferPrepare()
 
-	size := len(msg)
+	n = len(msg)
+	size := n
 	empty := true
 	if size > 0 {
 		for i := size - 1; i >= 0; i-- {
