@@ -40,7 +40,10 @@ func (i *Logger) watch(err *error, stack bool, prefix ...interface{}) {
 	buf.WriteString(`() `)
 	buf.WriteString((*err).Error())
 
-	cfg := i.GetConfig(i.CError)
+	cfg := i.CWatch
+	if cfg == nil {
+		cfg = i.GetConfig(i.CError)
+	}
 
 	if stack {
 		a := bytes.Split(debug.Stack(), []byte{'\n'})

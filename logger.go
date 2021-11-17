@@ -13,6 +13,7 @@ type Logger struct {
 	CError   *Config
 	CWarn    *Config
 	CFatal   *Config
+	CWatch   *Config
 }
 
 // NewSimple ...

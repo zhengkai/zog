@@ -30,6 +30,7 @@ type Config struct {
 	MsgPrefix       string // before the message
 	Color           string
 	TimeFormat      string
+	CallerSkip      int
 	dir             string
 	dirLen          int
 }
@@ -87,7 +88,7 @@ func (c *Config) bufferPrepare() (buf *bytes.Buffer) {
 	}
 
 	if c.Caller != CallerNone {
-		_, file, line, ok := runtime.Caller(4)
+		_, file, line, ok := runtime.Caller(4 + c.CallerSkip)
 		if ok {
 			file = strings.TrimSuffix(file, hideExt)
 			if c.Caller == CallerShort {
