@@ -56,11 +56,12 @@ func (i *Logger) AllConfig() []*Config {
 	return []*Config{i.CDefault, i.CPrint, i.CDebug, i.CInfo, i.CError, i.CWarn, i.CFatal}
 }
 
-// SetDirPrefix dir prefix in caller filename with be hidden
+// SetDirPrefix dir prefix in caller filename will be hidden
 func (i *Logger) SetDirPrefix(d string) {
 	for _, c := range i.AllConfig() {
 		if c != nil {
 			c.SetDirPrefix(d)
+			c.Caller = CallerLong
 		}
 	}
 }
